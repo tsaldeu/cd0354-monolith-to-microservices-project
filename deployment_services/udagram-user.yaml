@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    service: backend-user
+  name: backend-user
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-user
+  template:
+    metadata:
+      labels:
+        app: backend-user
+        service: backend-user
+    spec:
+      containers:
+      - image: tsaldeu/udagram-api-user:v1
+        name: udagram-api-user
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "2048Mi"
+            cpu: "500m"          
+        env:
+          - name: POSTGRES_USERNAME
+            value: postgres
+          - name: POSTGRES_PASSWORD
+            value: sandraemma
+          - name: JWT_SECRET
+            value: testing
+          - name: POSTGRES_DB
+            value: postgres
+          - name: POSTGRES_HOST
+            value: udagram.czcc5ynu2hea.us-east-1.rds.amazonaws.com
+          - name: AWS_REGION
+            value: us-east-1
+          - name: AWS_PROFILE
+            value: default
+          - name: AWS_BUCKET
+            value: test-733296845331-dev
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+          - name: aws-secret
+            mountPath: "/root/.aws/"
+            readOnly: true
+      restartPolicy: Always
+      volumes:
+        - name: aws-secret
+          secret:
+            secretName: aws-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-user
+  labels:
+    run: backend-user
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+  selector:
+    run: backend-user

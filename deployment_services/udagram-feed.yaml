@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    service: backend-feed
+  name: backend-feed
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend-feed
+  template:
+    metadata:
+      labels:
+        app: backend-feed
+        service: backend-feed
+    spec:
+      containers:
+      - image: tsaldeu/udagram-api-feed:v1
+        name: udagram-api
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "2048Mi"
+            cpu: "500m"          
+        env:
+          - name: POSTGRES_USERNAME
+            value: postgres
+          - name: POSTGRES_PASSWORD
+            value: sandraemma
+          - name: JWT_SECRET
+            value: testing
+          - name: POSTGRES_DB
+            value: postgres
+          - name: POSTGRES_HOST
+            value: udagram.czcc5ynu2hea.us-east-1.rds.amazonaws.com
+          - name: AWS_REGION
+            value: us-east-1
+          - name: AWS_PROFILE
+            value: default
+          - name: AWS_BUCKET
+            value: test-733296845331-dev
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+          - name: aws-secret
+            mountPath: "/root/.aws/"
+            readOnly: true
+      restartPolicy: Always
+      volumes:
+        - name: aws-secret
+          secret:
+            secretName: aws-secret
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-feed
+  labels:
+    run: backend-feed
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+  selector:
+    run: backend-feed

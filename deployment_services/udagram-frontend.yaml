@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    service: udagram-frontend
+  name: udagram-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: udagram-frontend
+  template:
+    metadata:
+      labels:
+        app: udagram-frontend
+        service: udagram-frontend
+    spec:
+      containers:
+      - image: tsaldeu/udagram-frontend:v1
+        name: udagram-frontend
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "2048Mi"
+            cpu: "500m"          
+        env:
+          - name: POSTGRES_USERNAME
+            value: postgres
+          - name: POSTGRES_PASSWORD
+            value: sandraemma
+          - name: JWT_SECRET
+            value: testing
+          - name: POSTGRES_DB
+            value: postgres
+          - name: POSTGRES_HOST
+            value: udagram.czcc5ynu2hea.us-east-1.rds.amazonaws.com
+          - name: AWS_REGION
+            value: us-east-1
+          - name: AWS_PROFILE
+            value: default
+          - name: AWS_BUCKET
+            value: test-733296845331-dev
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+          - name: aws-secret
+            mountPath: "/root/.aws/"
+            readOnly: true
+      restartPolicy: Always
+      volumes:
+        - name: aws-secret
+          secret:
+            secretName: aws-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: udagram-frontend
+  name: udagram-frontend
+spec:
+  ports:
+  - name: "8100"
+    port: 8100
+    targetPort: 80
+  selector:
+    service: udagram-frontend
+  type: LoadBalancer 
